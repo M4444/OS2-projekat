@@ -79,21 +79,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\..\Desktop\OS2\Projekat\fs.cpp" />
-    <ClCompile Include="..\..\..\..\..\Desktop\OS2\Projekat\kernelfs.cpp" />
-    <ClCompile Include="..\..\..\..\..\Desktop\OS2\Projekat\part.cpp" />
-    <ClCompile Include="..\..\..\..\..\Desktop\OS2\Projekat\partimp.cpp" />
     <ClCompile Include="file.cpp" />
+    <ClCompile Include="fs.cpp" />
+    <ClCompile Include="kernelfs.cpp" />
     <ClCompile Include="kernfile.cpp" />
+    <ClCompile Include="part.cpp" />
+    <ClCompile Include="partimp.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\file.h" />
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\fs.h" />
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\kernelfs.h" />
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\part.h" />
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\partimp.h" />
+    <ClInclude Include="file.h" />
+    <ClInclude Include="fs.h" />
+    <ClInclude Include="kernelfs.h" />
     <ClInclude Include="kernfile.h" />
+    <ClInclude Include="part.h" />
+    <ClInclude Include="partimp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

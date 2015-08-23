@@ -1,29 +1,31 @@
 // partimp.h
 #pragma once
 
+#include "part.h"
 #include <string>
 
+/*
 struct Cluster {
 	unsigned char c [ClusterSize];
 	unsigned char &operator[](int n) { return c[n]; }
-};
+};*/
 
-class PartitionImpl {
+class PartitionImpl{
 public:
 	PartitionImpl(char *);
 	
-	virtual ClusterNo getNumOfClusters() const;
+	ClusterNo getNumOfClusters() const;
 	
-	virtual int readCluster(ClusterNo, char *buffer);
-	virtual int writeCluster(ClusterNo, const char *buffer);
+	int readCluster(ClusterNo, char *buffer);
+	int writeCluster(ClusterNo, const char *buffer);
 	
-	virtual ~PartitionImpl();
+	//virtual ~PartitionImpl();
 private:
-	//PartitionImpl * myImpl;
 	char name[100];
-	unsigned long size;
+	ClusterNo size;
 	
-	//Cluster *workingCl;
+	///Cluster *workingCl;
 	char workingCl[ClusterSize];
 	unsigned long workingClNum;
+	bool wclinit;
 };

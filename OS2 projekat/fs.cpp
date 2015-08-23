@@ -44,7 +44,7 @@ char FS::deleteFile(char* fname)
 
 char FS::readDir(char* dirname, EntryNum n, Entry &e)
 {
-	return myImpl->deleteFile(dirname, n, e);
+	return myImpl->readDir(dirname, n, e);
 }
 
 

@@ -6,7 +6,7 @@
 
 ///using namespace std;
 
-PartitionImpl::PartitionImpl(char *initName)
+PartitionImpl::PartitionImpl(char *initName):wclinit(false)
 {		
 	std::ifstream input;
 	std::string s;
@@ -23,6 +23,12 @@ PartitionImpl::PartitionImpl(char *initName)
 
 	input >> s;
 	size = std::stol(s);
+
+	if(size <= 0)
+	{
+		std::cout << "GRESKA: Velicina particije mora biti pozitivna i veca od nule!" << std::endl;
+		exit(1);
+	}
 	
 	input.close();
 }
@@ -36,12 +42,14 @@ int PartitionImpl::readCluster(ClusterNo num, char *buffer)
 {
 	if(num > size || num < 0) return 0;
 	// OPERZ: KONKURENTNOST!
-	if(workingClNum != num)
+	if(workingClNum != num || !wclinit)
 	{
 		FILE *f=fopen(name, "rb");
 		if(f==0) return 0;
-		if (fread(workingCl, 1, ClusterSize, f) != ClusterSize) return 0;
+		fseek(f, num*ClusterSize, SEEK_SET);
+		if(fread(workingCl, 1, ClusterSize, f) != ClusterSize) return 0;
 		workingClNum = num;
+		wclinit = true;
 		fclose(f);
 	}
 	memcpy(buffer, workingCl, ClusterSize);
@@ -54,10 +62,12 @@ int PartitionImpl::writeCluster(ClusterNo num, const char *buffer)
 	// OPERZ: KONKURENTNOST!
 	FILE *f=fopen(name, "r+b");
 	if(f==0) return 0;
-	if(workingClNum != num)
+	if(workingClNum != num || !wclinit)
 	{
-		if (fread(workingCl, 1, ClusterSize, f) != ClusterSize) return 0;
+		fseek(f, num*ClusterSize, SEEK_SET);
+		if(fread(workingCl, 1, ClusterSize, f) != ClusterSize) return 0;
 		workingClNum = num;
+		wclinit = true;
 	}
 	memcpy(workingCl, buffer, ClusterSize);
 	fwrite(workingCl, 1, ClusterSize, f);

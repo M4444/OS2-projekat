@@ -8,17 +8,17 @@ Partition::Partition(char *initName)
 
 ClusterNo Partition::getNumOfClusters() const
 {
-	myImpl->getNumOfClusters();
+	return myImpl->getNumOfClusters();
 }
 
 int Partition::readCluster(ClusterNo num, char *buffer)
 {
-	myImpl->readCluster(num, buffer);
+	return myImpl->readCluster(num, buffer);
 }
 
 int Partition::writeCluster(ClusterNo num, const char *buffer)
 {
-	myImpl->writeCluster(num, buffer);
+	return myImpl->writeCluster(num, buffer);
 }
 
 Partition::~Partition()

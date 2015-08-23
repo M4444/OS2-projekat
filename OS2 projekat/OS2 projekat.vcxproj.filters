@@ -24,42 +24,42 @@
     <ClCompile Include="test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\Desktop\OS2\Projekat\kernelfs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\..\Desktop\OS2\Projekat\partimp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="kernfile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="file.cpp">
       <Filter>Source Files\Wrapper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\Desktop\OS2\Projekat\fs.cpp">
+    <ClCompile Include="fs.cpp">
       <Filter>Source Files\Wrapper</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\..\Desktop\OS2\Projekat\part.cpp">
+    <ClCompile Include="part.cpp">
       <Filter>Source Files\Wrapper</Filter>
+    </ClCompile>
+    <ClCompile Include="kernelfs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="partimp.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\kernelfs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\partimp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="kernfile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\file.h">
+    <ClInclude Include="partimp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kernelfs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="file.h">
       <Filter>Header Files\Wrapper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\fs.h">
+    <ClInclude Include="fs.h">
       <Filter>Header Files\Wrapper</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\..\Desktop\OS2\Projekat\part.h">
+    <ClInclude Include="part.h">
       <Filter>Header Files\Wrapper</Filter>
     </ClInclude>
   </ItemGroup>
