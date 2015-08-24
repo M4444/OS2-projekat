@@ -52,6 +52,7 @@ public:
 		//procitani ulaz
 
 	static char writeFile(KernelFile *f, BytesCnt Bcnt, char* buffer);
+	static BytesCnt readFile(KernelFile *f, BytesCnt Bcnt, char* buffer);
 private:
 	//static void clFormat(Claster *c);
 	static void Bto4B(unsigned char* z, const unsigned char c);

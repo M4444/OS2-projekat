@@ -18,15 +18,14 @@ KernelFile::KernelFile(char p, char m, char *n, char *e, ClusterNo firstCl, Byte
 
 char KernelFile::write(BytesCnt Bcnt, char* buffer)
 {
-	if (!opened) return 0;
+	if (!opened || mode == 'r') return 0;
 	return KernelFS::writeFile(this, Bcnt, buffer);
 }
 
 BytesCnt KernelFile::read(BytesCnt Bcnt, char* buffer)
 {
-
-	// TODO
-	return 0;
+	if(!opened || cursor == size) return 0;
+	return KernelFS::readFile(this, Bcnt, buffer);
 }
 
 char KernelFile::seek(BytesCnt Bcnt)

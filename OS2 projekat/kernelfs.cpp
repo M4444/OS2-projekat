@@ -299,7 +299,7 @@ char KernelFS::doesExist(char* fname)
 	{
 		if(i * 20>ClusterSize)	// cache next cluster
 		{
-			clNum++;
+			clNum = next(clNum);
 			r = KernelFS::partitions[ind]->readCluster(clNum, KernelFS::clCache);
 			if(r != 1) return 0;
 			currClNum = clNum;
@@ -340,7 +340,7 @@ File* KernelFS::open(char* fname, char mode)
 	unsigned char z[4];
 	Entry *e = new Entry();
 	char zz[20];
-	ClusterNo clNum = 0, entryNum = 0;
+	ClusterNo oldClNum, clNum = 0, entryNum = 0;
 	int r;
 
 	memcpy(z, KernelFS::FATcache + 8, 4);
@@ -364,7 +364,8 @@ File* KernelFS::open(char* fname, char mode)
 		if(i / (ClusterSize / 20) > br)	// cache next cluster
 		{
 			br++;
-			clNum++;
+			oldClNum = clNum;
+			clNum = next(clNum);
 			if(compF)
 			{
 				r = KernelFS::partitions[ind]->readCluster(clNum, clCache2);
@@ -372,7 +373,7 @@ File* KernelFS::open(char* fname, char mode)
 
 				memcpy(KernelFS::clCache + (n - 1) * 20, clCache2, 20);
 
-				r = KernelFS::partitions[ind]->writeCluster(clNum - 1, KernelFS::clCache);
+				r = KernelFS::partitions[ind]->writeCluster(oldClNum, KernelFS::clCache);
 				if(r != 1) return 0;
 
 				memcpy(KernelFS::clCache, clCache2, ClusterSize);
@@ -469,37 +470,6 @@ File* KernelFS::open(char* fname, char mode)
 	r = (mode == 'a' ? file->seek(size - 1) : file->seek(0));
 	if(r != 1) return NULL;
 	return file;
-
-	/*if(mode == 'w')
-	{
-		unsigned char b[8];
-		for(cnt = 0; cnt<8; cnt++)
-		{
-			if(pathBuff[cnt + 3] == '.') break;
-			b[cnt] = pathBuff[cnt + 3];
-		}
-		if(cnt < 1 || strlen(pathBuff) - cnt - 1 != 3) return NULL;
-		for(int i = cnt; i<8; i++) b[i] = ' ';
-		// da li treba da se pise?
-		char buffer[ClusterSize] = { 0 };
-		memcpy(buffer, b, 8);
-
-		for(int i = 0; i<4; i++) b[i] = pathBuff[cnt + 4 + i];
-		memcpy(buffer + 8, b, 4);
-		clear4B(b);
-		memcpy(buffer + 12, b, 4);
-	}
-
-	char m[1] = { mode };
-	FILE *f = fopen(fname, m);
-	if(f == 0) return NULL;
-
-	File *file;
-	file->myImpl = new KernelFile(f);*/
-
-	// dodavanje u root dir
-
-	//return file;
 }
 
 ClusterNo KernelFS::next(ClusterNo c)
@@ -606,7 +576,7 @@ char KernelFS::deleteFile(char* fname)
 	unsigned char z[4];
 	Entry *e = new Entry();
 	char zz[20];
-	ClusterNo clNum = 0, entryNum = 0;
+	ClusterNo oldClNum, clNum = 0, entryNum = 0;
 	int r;
 
 	memcpy(z, KernelFS::FATcache + 8, 4);
@@ -630,7 +600,8 @@ char KernelFS::deleteFile(char* fname)
 		if(i / (ClusterSize / 20) > br)	// cache next cluster
 		{
 			br++;
-			clNum++;
+			oldClNum = clNum;
+			clNum = next(clNum);
 			if(compF)
 			{
 				r = KernelFS::partitions[ind]->readCluster(clNum, clCache2);
@@ -638,7 +609,7 @@ char KernelFS::deleteFile(char* fname)
 
 				memcpy(KernelFS::clCache + (n - 1) * 20, clCache2, 20);
 
-				r = KernelFS::partitions[ind]->writeCluster(clNum - 1, KernelFS::clCache);
+				r = KernelFS::partitions[ind]->writeCluster(oldClNum, KernelFS::clCache);
 				if(r != 1) return 0;
 
 				memcpy(KernelFS::clCache, clCache2, ClusterSize);
@@ -729,7 +700,6 @@ char KernelFS::readDir(char* dirname, EntryNum n, Entry &e)
 
 char KernelFS::writeFile(KernelFile *f, BytesCnt Bcnt, char* buffer)
 {
-	//ClusterNo clSize = getClNumFromBsize(Bcnt);
 	BytesCnt currFileSize = f->getFileSize();
 	ClusterNo currClSize = getClNumFromBsize(currFileSize);
 	ClusterNo newClSize = getClNumFromBsize(Bcnt) + 1;
@@ -804,19 +774,67 @@ char KernelFS::writeFile(KernelFile *f, BytesCnt Bcnt, char* buffer)
 		if(r != 1) return 0;		
 	}
 	// write to file
-	///memcpy(z, KernelFS::FATcache + 16 + f->data*FATBSIZE, 4);	// first file cluster
-	///currFile = B4toUlong(z);
-	currFile = f->data;
+	ClusterNo oldClNum, clNum = f->data + getClNumFromBsize(f->filePos());
+	unsigned int n, i, br = 0;
+	bool firstPass = true;
 
-	int i = 0;
-	while(currFile != 0)
+	for(i = 0; i < Bcnt; i++)
 	{
-		r = KernelFS::partitions[f->part - 'A']->writeCluster(currFile, buffer+i*ClusterSize);
-		if(r != 1) return 0;
-		currFile = next(currFile);
-		///if(next(currFile) == 0) writeNext(currFile, 0xffffffff);
-		///else writeNext(currFile, next(currFile));
-		i++;
+		n = f->filePos() % ClusterSize;
+		if(f->filePos() / ClusterSize > br || firstPass)	// cache next cluster
+		{
+			if(!firstPass)
+			{
+				r = KernelFS::partitions[f->part - 'A']->writeCluster(oldClNum, KernelFS::clCache);
+				if(r != 1) return 0;
+			}
+			if(!KernelFS::clCached || currClNum != clNum)
+			{
+				r = KernelFS::partitions[f->part - 'A']->readCluster(clNum, KernelFS::clCache);
+				if(r != 1) return 0;
+				currClNum = clNum;
+				KernelFS::clCached = true;
+			}
+			oldClNum = clNum;
+			clNum = next(clNum);
+			firstPass = false;
+			br++;
+		}
+
+		memcpy(KernelFS::clCache + n, buffer + i, 1);
+
+		f->seek(f->filePos() + 1);
+		if(f->eof()) return 0;
 	}
 	return 1;
+}
+
+BytesCnt KernelFS::readFile(KernelFile *f, BytesCnt Bcnt, char* buffer)
+{
+	ClusterNo clNum = f->data + getClNumFromBsize(f->filePos());
+	unsigned int r, n, i, br = 0;
+	bool firstPass = true;
+
+	for(i = 0; i < Bcnt; i++)
+	{
+		n = f->filePos() % ClusterSize;
+		if(f->filePos() / ClusterSize > br || firstPass)	// cache next cluster
+		{
+			if(!KernelFS::clCached || currClNum != clNum)
+			{
+				r = KernelFS::partitions[f->part - 'A']->readCluster(clNum, KernelFS::clCache);
+				if(r != 1) return NULL;
+				currClNum = clNum;
+				KernelFS::clCached = true;
+			}
+			clNum = next(clNum);
+			firstPass = false;
+			br++;
+		}
+	
+		memcpy(buffer + i, KernelFS::clCache + n, 1);
+		f->seek(f->filePos()+1);
+		if(f->eof()) break;
+	}
+	return i;
 }
