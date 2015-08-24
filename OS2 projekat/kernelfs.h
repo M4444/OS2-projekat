@@ -8,6 +8,7 @@ const unsigned int FATBITSIZE = 32;
 const unsigned int FATBSIZE = FATBITSIZE/8;
 
 class File;
+class KernelFile;
 
 class KernelFS {
 private:
@@ -49,19 +50,21 @@ public:
 		//prvim argumentom se zadaje apsolutna putanja, drugim redni broj
 		//ulaza koji se cita, treci argument je adresa na kojoj se smesta 
 		//procitani ulaz
+
+	static char writeFile(KernelFile *f, BytesCnt Bcnt, char* buffer);
 private:
 	//static void clFormat(Claster *c);
 	static void Bto4B(unsigned char* z, const unsigned char c);
 	static void ulongTo4B(unsigned char* z, const unsigned long l);
-	static void B4toUlong(unsigned long l, const unsigned char* z);
+	static unsigned long B4toUlong(const unsigned char* z);
 	static void clear4B(unsigned char* z);
 	static bool partIsMounted(char p);
 	static void writeFAT(ClusterNo num, const char *buffer);
-	static void getFileName(char *ext, const char* fname);
+	static int getFileName(char *ext, const char* fname);
 	static void getFileExt(char *ext, const char* fname);
 	static ClusterNo getClNumFromBsize(unsigned int sizeB);
 
-	static char deleteFile(Entry *e, int part);
+	static char deleteFile(char *e, int part);
 	static ClusterNo next(ClusterNo c);
 	static void writeNext(ClusterNo dest, ClusterNo sour);
 };

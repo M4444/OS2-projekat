@@ -1,29 +1,25 @@
 #include "kernfile.h"
 #include <cstdio>
 #include <string.h>
+#include "kernelfs.h"
 
-KernelFile::KernelFile(char m, char *n, char *e, ClusterNo firstCl, BytesCnt s)
+KernelFile::KernelFile(char p, char m, char *n, char *e, ClusterNo firstCl, BytesCnt s, EntryNum en)
 {
 	strcpy(name, n);
 	strcpy(ext, e);
 	data = firstCl;
 	size = s;
 	mode = m;
+	entryNum = en;
+	part = p;
 
-	opened = true;
-}
-
-KernelFile::KernelFile(BytesCnt byteSize)
-{
-	size = byteSize;
-	//cursor = 0;
 	opened = true;
 }
 
 char KernelFile::write(BytesCnt Bcnt, char* buffer)
 {
-	// TODO
-	return 0;
+	if (!opened) return 0;
+	return KernelFS::writeFile(this, Bcnt, buffer);
 }
 
 BytesCnt KernelFile::read(BytesCnt Bcnt, char* buffer)

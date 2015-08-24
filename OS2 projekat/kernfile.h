@@ -11,6 +11,8 @@ private:
 	bool opened;
 	BytesCnt cursor;
 	char mode;
+	char part;
+	EntryNum entryNum;
 
 	char name[FNAMELEN + 1];
 	char ext[FEXTLEN + 1];
@@ -31,7 +33,7 @@ private:
 	friend class FS;
 	friend class KernelFS;
 	//friend class File;
-	KernelFile(char m, char *name, char *ext, ClusterNo firstCl, BytesCnt size);
-	KernelFile(BytesCnt byteSize); 			//objekat fajla se moze kreirati samo otvaranjem
+	KernelFile(char p, char m, char *n, char *e, ClusterNo firstCl, BytesCnt s, EntryNum en);
+	///KernelFile(BytesCnt byteSize); 			//objekat fajla se moze kreirati samo otvaranjem
 	///KernelFile *myImpl;
 };

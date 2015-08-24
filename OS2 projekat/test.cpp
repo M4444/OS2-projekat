@@ -17,7 +17,6 @@ int main()
 	FS::format(p1);
 	cout << "Formatirana particija" << endl;
 
-
 	{
 		char filepath[] = "1:\\fajl1.dat";
 		filepath[0] = p1;
