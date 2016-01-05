@@ -30,30 +30,30 @@ BytesCnt KernelFile::read(BytesCnt Bcnt, char* buffer)
 
 char KernelFile::seek(BytesCnt Bcnt)
 {
-	if(Bcnt > size) return 0;
+	if(!opened || Bcnt > size || mode == 'a') return 0;
 	cursor = Bcnt;
 	return 1;
 }
 
 BytesCnt KernelFile::filePos()
 {
+	if(!opened) return 0;
 	return cursor;
 }
 
 char KernelFile::eof()
 {
+	if(!opened) return 1;
 	return (cursor == size)?2:0;
 }
 
 BytesCnt KernelFile::getFileSize()
 {
+	if(!opened) return 0;
 	return size;
 }
-
-///char KernelFile::truncate(); 	//** opciono
 
 KernelFile::~KernelFile()
 {
 	opened = false;
-	// TODO
 }

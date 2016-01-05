@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
-
-///using namespace std;
+#include "kernelfs.h"
 
 PartitionImpl::PartitionImpl(char *initName):wclinit(false)
 {		
@@ -14,7 +13,7 @@ PartitionImpl::PartitionImpl(char *initName):wclinit(false)
 	input.open(initName);
 	if(!input.is_open())
 	{
-		std::cout << "GRESKA: Nije nadjen konfiguracioni fajl '" << initName << "' u os domacinu!" << std::endl;
+		std::cout << "***GRESKA: Nije nadjen konfiguracioni fajl '" << initName << "' u os domacinu***\a" << std::endl;
 		exit(1);
 	}
 	input >> s;
@@ -26,7 +25,7 @@ PartitionImpl::PartitionImpl(char *initName):wclinit(false)
 
 	if(size <= 0)
 	{
-		std::cout << "GRESKA: Velicina particije mora biti pozitivna i veca od nule!" << std::endl;
+		std::cout << "***GRESKA: Velicina particije mora biti pozitivna i veca od nule***\a" << std::endl;
 		exit(1);
 	}
 	
@@ -40,8 +39,8 @@ ClusterNo PartitionImpl::getNumOfClusters() const
 
 int PartitionImpl::readCluster(ClusterNo num, char *buffer)
 {
+	EnterCriticalSection(&KernelFS::critical);
 	if(num > size || num < 0) return 0;
-	// OPERZ: KONKURENTNOST!
 	if(workingClNum != num || !wclinit)
 	{
 		FILE *f=fopen(name, "rb");
@@ -53,13 +52,14 @@ int PartitionImpl::readCluster(ClusterNo num, char *buffer)
 		fclose(f);
 	}
 	memcpy(buffer, workingCl, ClusterSize);
+	LeaveCriticalSection(&KernelFS::critical);
 	return 1;
 }
 
 int PartitionImpl::writeCluster(ClusterNo num, const char *buffer)
 {
+	EnterCriticalSection(&KernelFS::critical);
 	if(num > size || num < 0) return 0;
-	// OPERZ: KONKURENTNOST!
 	FILE *f=fopen(name, "r+b");
 	if(f==0) return 0;
 	if(workingClNum != num || !wclinit)
@@ -72,7 +72,6 @@ int PartitionImpl::writeCluster(ClusterNo num, const char *buffer)
 	memcpy(workingCl, buffer, ClusterSize);
 	fwrite(workingCl, 1, ClusterSize, f);
 	fclose(f);
+	LeaveCriticalSection(&KernelFS::critical);
 	return 1;
 }
-
-//PartitionImpl::~PartitionImpl()

@@ -1,10 +1,7 @@
 #include "file.h"
 #include "kernfile.h"
 
-File::File()
-{
-	///myImpl = new KernelFile();
-}
+File::File() {}
 
 char File::write(BytesCnt Bcnt, char* buffer)
 {
@@ -30,8 +27,6 @@ BytesCnt File::getFileSize()
 {
 	return myImpl->getFileSize();
 }
-
-///char File::truncate(); 	//** opciono
 
 File::~File()
 {

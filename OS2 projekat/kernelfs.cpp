@@ -6,25 +6,26 @@
 #include <stdio.h>
 #include <cmath>
 
-//KernelFS::partitions = nullptr;
 Partition* KernelFS::partitions[26];
 char* KernelFS::FATcache;
 char KernelFS::clCache[ClusterSize];
 ClusterNo KernelFS::currClNum;
 bool KernelFS::clCached;
 
+CRITICAL_SECTION KernelFS::critical;
+
 KernelFS::KernelFS()
 {
+	InitializeCriticalSection(&critical);
 	for(int i = 0; i<26; i++) KernelFS::partitions[i] = nullptr;
-	//currClNum = -1
 	KernelFS::clCached = false;
 }
 
 KernelFS::~KernelFS()
 {
 	for(int i = 0; i<26; i++) delete KernelFS::partitions[i];
-	///delete[] KernelFS::partitions;
 	delete[] KernelFS::FATcache;
+	DeleteCriticalSection(&critical);
 }
 
 void KernelFS::Bto4B(unsigned char* z, const unsigned char c)
@@ -63,10 +64,8 @@ bool KernelFS::partIsMounted(char p)
 void KernelFS::writeFAT(ClusterNo num, const char *buffer)
 {
 	if(!KernelFS::FATcache) return;
-	//if(num > size || num < 0) return 0;
 
 	memcpy(KernelFS::FATcache + num*ClusterSize, buffer, ClusterSize);
-	///fwrite(workingCl, 1, ClusterSize, f);
 }
 
 int KernelFS::getFileName(char *name, const char* fname)
@@ -101,6 +100,13 @@ ClusterNo KernelFS::getClNumFromBsize(unsigned int sizeB)
 	return clNum;
 }
 
+int KernelFS::getMountNum(char part)
+{
+	int num = 'A' - part;
+	if(num < 0 || num > 26) return -1;
+	if(!partIsMounted(part)) return -2;
+}
+
 char KernelFS::mount(Partition* partition)
 {
 	int i=0;
@@ -115,8 +121,8 @@ char KernelFS::mount(Partition* partition)
 
 char KernelFS::unmount(char part)
 {
-	int ind = 'A'-part;
-	if(ind > 26 || ind < 0) return '0';
+	int ind = getMountNum(part);
+	if(ind < 0) return '0';
 	
 	if(KernelFS::partitions[ind] != nullptr)
 	{
@@ -124,19 +130,13 @@ char KernelFS::unmount(char part)
 		return '1';		// uspeh
 	}
 	else return '0';	// neuspeh
-	
-	///char r = (KernelFS::partitions[ind] == NULL) ? '0' : '1';
-	///KernelFS::partitions[ind] = NULL;
-	///return r;
 }
 
 char KernelFS::format(char part)
 {
-	int ind = 'A'-part;
-	if(ind > 26 || ind < 0) return 0;
-	if(!partIsMounted(part)) return 0;
+	int ind = getMountNum(part);
+	if(ind < 0) return 0;
 	
-	///Cluster *c = new Cluster();
 	int r;
 	char buffer[ClusterSize] = {0};
 	
@@ -147,8 +147,6 @@ char KernelFS::format(char part)
 	
 	unsigned char z[4];
 	unsigned long j;
-	///unsigned long rootClNum = (FATsize + 16) / ClusterSize +
-	///						  ((FATsize + 16) % ClusterSize) == 0 ? 0 : 1;
 	ClusterNo k = 0;
 	ClusterNo rootClNum = getClNumFromBsize(FATsize + 16) + 1;
 
@@ -161,7 +159,6 @@ char KernelFS::format(char part)
 	ulongTo4B(z, rootClNum);	// broj ulaza korenog direktorijuma
 	memcpy(buffer + 8, z, 4);
 	Bto4B(z, 0);	// broj ulaza u korenom direktorijumu
-	// 0? Treba da se menja kad se napravi novi fajl
 	memcpy(buffer + 12, z, 4);
 
 	if(FATsize+16 < ClusterSize)	// FAT staje u nulti klaster
@@ -170,7 +167,7 @@ char KernelFS::format(char part)
 			// preskace nulti ulaz
 		Bto4B(z, 0xff);	// ulaz korenog direktorijuma
 		memcpy(buffer+20, z, 4);
-		FATsize -= 8;	// jer si predjena 2 ulaza
+		FATsize -= 8;	// jer su predjena 2 ulaza
 		j = 3;
 	}
 	else	// FAT ne staje u nulti klaster
@@ -185,14 +182,12 @@ char KernelFS::format(char part)
 			Bto4B(z, 0xff);	// ulaz korenog direktorijuma
 			memcpy(buffer+rootClNum*4+4, z, 4);
 			FATsize -= rootClNum*4;
-			///unsigned long j = 1+rootClNum;
 			for(unsigned long i=rootClNum*4+8; i<ClusterSize; i+=4)	// ulancavanje slobodnih klastera
-				{
-					ulongTo4B(z, j);
-					memcpy(buffer+4*(j+3), z, 4);
-					///FATsize -= 4;
-					j++;
-				}
+			{
+				ulongTo4B(z, j);
+				memcpy(buffer+4*(j+3), z, 4);
+				j++;
+			}
 		}
 		// write buffer
 		r = KernelFS::partitions[ind]->writeCluster(0, buffer);
@@ -232,7 +227,6 @@ char KernelFS::format(char part)
 	}
 	Bto4B(z, 0xff);	// kraj liste
 	memcpy(buffer + 4 * (j + 3), z, 4);
-	///FATsize -= 4;	// nepotrebno
 
 	r = KernelFS::partitions[ind]->writeCluster(k, buffer);
 	writeFAT(k, buffer);
@@ -256,7 +250,6 @@ char KernelFS::format(char part)
 	memcpy(buffer + 16, z, 4);
 
 	r = KernelFS::partitions[ind]->writeCluster(k, buffer);
-	///writeFAT(k, buffer);
 	if(r != 1) return 0;
 	return 1;
 }
@@ -264,7 +257,6 @@ char KernelFS::format(char part)
 char KernelFS::doesExist(char* fname)
 {
 	unsigned char z[4];
-	Entry *e = new Entry();
 	char zz[20];
 	ClusterNo clNum = 0, entryNum = 0;
 	int r;
@@ -274,9 +266,8 @@ char KernelFS::doesExist(char* fname)
 	strcpy(pathBuff, fname);
 
 	// provera particije i formata
-	int ind = 'A' - pathBuff[0];
-	if(ind > 26 || ind < 0) return 0;
-	if(!partIsMounted(pathBuff[0])) return 0;
+	int ind = getMountNum(pathBuff[0]);
+	if(ind < 0) return 0;
 	if(pathBuff[1] != ':' || pathBuff[2] != '\\') return 0;
 
 	getFileName(name, pathBuff);
@@ -322,9 +313,8 @@ File* KernelFS::open(char* fname, char mode)
 	// provera moda
 	if(mode != 'r' && mode != 'w' && mode != 'a') return NULL;
 	// provera particije i formata
-	int ind = 'A' - pathBuff[0];
-	if(ind > 26 || ind < 0) return NULL;
-	if(!partIsMounted(pathBuff[0])) return NULL;
+	int ind = getMountNum(pathBuff[0]);
+	if(ind < 0) return NULL;
 	if(pathBuff[1] != ':' || pathBuff[2] != '\\') return NULL;
 
 	// fajl
@@ -338,7 +328,6 @@ File* KernelFS::open(char* fname, char mode)
 	strl = strlen(ext);
 
 	unsigned char z[4];
-	Entry *e = new Entry();
 	char zz[20];
 	ClusterNo oldClNum, clNum = 0, entryNum = 0;
 	int r;
@@ -416,12 +405,6 @@ File* KernelFS::open(char* fname, char mode)
 		}
 	}
 	else if(!compF) return NULL;	// ne postoji fajl
-	
-	/*if(compF && mode == 'w')	// fajl postoji
-	{
-		if(deleteFile(e, ind) != 1) return NULL;
-	}
-	else return NULL;	// ne postoji fajl*/
 
 	ClusterNo firstCl = 0, size = 0;
 	if(mode == 'w')
@@ -443,9 +426,7 @@ File* KernelFS::open(char* fname, char mode)
 		memcpy(zz, name, 8);
 		memcpy(zz + 8, ext, 3);
 		clear4B(z);
-		///ulongTo4B(z, firstFree);
 		memcpy(zz + 0xc, z, 4);
-		clear4B(z);
 		memcpy(zz + 0x10, z, 4);
 
 		memcpy(KernelFS::clCache + ((entryNum+1) % (ClusterSize / 20))*20, zz, 20);
@@ -486,7 +467,6 @@ ClusterNo KernelFS::next(ClusterNo c)
 void KernelFS::writeNext(ClusterNo dest, ClusterNo sour)
 {
 	unsigned char z[4];
-	///ClusterNo nextCl;
 
 	ulongTo4B(z, sour);
 	memcpy(KernelFS::FATcache + 16 + dest*FATBSIZE, z, 4);
@@ -494,7 +474,6 @@ void KernelFS::writeNext(ClusterNo dest, ClusterNo sour)
 
 char KernelFS::deleteFile(char *e, int part)
 {
-	//									PROVERA DA LI JE OTVOREN !!!
 	unsigned char z[4];
 	ClusterNo fileClNum = 0, freeClNum = 0;
 
@@ -544,8 +523,6 @@ char KernelFS::deleteFile(char *e, int part)
 	}
 
 	ClusterNo lastCl = getClNumFromBsize((lastClNum + 4) * 4);
-	///ClusterNo lastCl = ((lastClNum + 4) * 4) / ClusterSize -
-	///				   (((lastClNum + 4) * 4) % ClusterSize) == 0 ? 1 : 0;
 	int r;
 	for(unsigned int i = 0; i < lastCl; i++)
 	{
@@ -557,14 +534,12 @@ char KernelFS::deleteFile(char *e, int part)
 
 char KernelFS::deleteFile(char* fname)
 {
-	//									PROVERA DA LI JE OTVOREN !!!
 	char pathBuff[30];
 	strcpy(pathBuff, fname);
 
 	// provera particije i formata
-	int ind = 'A' - pathBuff[0];
-	if(ind > 26 || ind < 0) return 0;
-	if(!partIsMounted(pathBuff[0])) return 0;
+	int ind = getMountNum(pathBuff[0]);
+	if(ind < 0) return 0;
 	if(pathBuff[1] != ':' || pathBuff[2] != '\\') return 0;
 
 	// fajl
@@ -574,7 +549,6 @@ char KernelFS::deleteFile(char* fname)
 	if(strlen(fname) - 3 - strlen(name) - 1 - strlen(ext) != 0) return 0;
 
 	unsigned char z[4];
-	Entry *e = new Entry();
 	char zz[20];
 	ClusterNo oldClNum, clNum = 0, entryNum = 0;
 	int r;
@@ -644,20 +618,13 @@ char KernelFS::deleteFile(char* fname)
 	else
 	{
 		r = deleteFile(zz, ind);
-		// kompakcija (i brisanje) klastera
-		// close file
 		return r;
 	}
 }
 
-///char KernelFS::createDir(char* dirname);
-
-///char KernelFS::deleteDir(char* dirname);
-
 char KernelFS::readDir(char* dirname, EntryNum n, Entry &e)
 {
 	unsigned char z[4];
-	//Entry *e;
 	ClusterNo clNum = 0, entryNum = 0;
 	int r;
 
@@ -665,9 +632,8 @@ char KernelFS::readDir(char* dirname, EntryNum n, Entry &e)
 	strcpy(pathBuff, dirname);
 
 	// provera particije i formata
-	int ind = 'A' - pathBuff[0];
-	if(ind > 26 || ind < 0) return 0;
-	if(!partIsMounted(pathBuff[0])) return 0;
+	int ind = getMountNum(pathBuff[0]);
+	if(ind < 0) return 0;
 	if(pathBuff[1] != ':' || pathBuff[2] != '\\') return 0;
 
 	memcpy(z, KernelFS::FATcache + 8, 4);

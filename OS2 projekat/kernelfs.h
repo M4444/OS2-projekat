@@ -3,6 +3,7 @@
 
 #include "fs.h"
 #include "part.h"
+#include <Windows.h>
 
 const unsigned int FATBITSIZE = 32;
 const unsigned int FATBSIZE = FATBITSIZE/8;
@@ -53,8 +54,9 @@ public:
 
 	static char writeFile(KernelFile *f, BytesCnt Bcnt, char* buffer);
 	static BytesCnt readFile(KernelFile *f, BytesCnt Bcnt, char* buffer);
+
+	static CRITICAL_SECTION critical;
 private:
-	//static void clFormat(Claster *c);
 	static void Bto4B(unsigned char* z, const unsigned char c);
 	static void ulongTo4B(unsigned char* z, const unsigned long l);
 	static unsigned long B4toUlong(const unsigned char* z);
@@ -64,6 +66,7 @@ private:
 	static int getFileName(char *ext, const char* fname);
 	static void getFileExt(char *ext, const char* fname);
 	static ClusterNo getClNumFromBsize(unsigned int sizeB);
+	static int getMountNum(char part); // new
 
 	static char deleteFile(char *e, int part);
 	static ClusterNo next(ClusterNo c);

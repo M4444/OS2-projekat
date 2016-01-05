@@ -7,7 +7,6 @@
 
 class KernelFile{
 private:
-	///FILE *f;
 	bool opened;
 	BytesCnt cursor;
 	char mode;
@@ -32,8 +31,5 @@ public:
 private:
 	friend class FS;
 	friend class KernelFS;
-	//friend class File;
 	KernelFile(char p, char m, char *n, char *e, ClusterNo firstCl, BytesCnt s, EntryNum en);
-	///KernelFile(BytesCnt byteSize); 			//objekat fajla se moze kreirati samo otvaranjem
-	///KernelFile *myImpl;
 };
