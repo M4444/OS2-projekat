@@ -79,21 +79,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="clusterbuffer.cpp" />
     <ClCompile Include="file.cpp" />
     <ClCompile Include="fs.cpp" />
     <ClCompile Include="kernelfs.cpp" />
     <ClCompile Include="kernfile.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="test_main.cpp" />
+    <ClCompile Include="nit1.cpp" />
+    <ClCompile Include="nit2.cpp" />
+    <ClCompile Include="nit3.cpp" />
     <ClCompile Include="part.cpp" />
     <ClCompile Include="partimp.cpp" />
-    <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="clusterbuffer.h" />
     <ClInclude Include="file.h" />
     <ClInclude Include="fs.h" />
     <ClInclude Include="kernelfs.h" />
     <ClInclude Include="kernfile.h" />
     <ClInclude Include="part.h" />
     <ClInclude Include="partimp.h" />
+    <ClInclude Include="testprimer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

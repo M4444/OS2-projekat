@@ -11,10 +11,29 @@ int inputSize;
 Partition *partition;
 char p;
 
+unsigned long bitVector = 0x3FFFFFFF;
+unsigned long bitPlace = ULONG_MAX;
+unsigned char isNonzero;
+
 int main(){
 	cout << "Pocetak main funkcije" << endl;
+	//bitPlace = __lzcnt(bitVector);
+	isNonzero = _BitScanReverse(&bitPlace, bitVector);
+	cout << '\t';
+	if(isNonzero)
+		cout << "bitPlace = " << 31-bitPlace << endl;
+	else
+		cout << "All the bits are 0" << endl;
+
+	partition = new Partition("p1.ini");
+	cout << "Kreirana particija" << endl;
+	p = FS::mount(partition);
+	if(p >= 'A' && p <= 'Z') cout << "Montirana particija" << endl;
+	else if(p == '0') cout << "***GRESKA: Nije nadjeno mesto za montiranje particije***\a" << endl;
+	else cout << "***NEPOZNATA GRESKA: Montiranje particije nije uspelo***\a" << endl;
+	FS::format(p);
 	// ucitavanje ulaznog fajla u bafer, da bi mogao da se cita
-	FILE *f = fopen("ulaz.dat", "rb");
+/*	FILE *f = fopen("ulaz.dat", "rb");
 	if(f == 0){
 		cout << "***GRESKA: Nije nadjen ulazni fajl 'ulaz.dat' u os domacinu***\a" << endl;
 		system("PAUSE");
@@ -32,6 +51,7 @@ int main(){
 	else if(p == '0') cout << "***GRESKA: Nije nadjeno mesto za montiranje particije***\a" << endl;
 	else cout << "***NEPOZNATA GRESKA: Montiranje particije nije uspelo***\a" << endl;
 	FS::format(p);
+*/
 	/*wait(mutex); cout << "Nit1: Formatirana particija" << endl; signal(mutex);
 	{
 		char filepath[] = "1:\\fajl1.dat";

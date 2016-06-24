@@ -5,6 +5,14 @@
 #include "part.h"
 #include <Windows.h>
 
+#define pToInd(x) ('A' - (x))
+#define indToP(x) ('A' + (x))
+
+const unsigned int IndEntrySize = 32/8;
+const unsigned int IndEntryNum = ClusterSize / IndEntrySize;
+
+typedef unsigned long IndEntry;
+
 const unsigned int FATBITSIZE = 32;
 const unsigned int FATBSIZE = FATBITSIZE/8;
 
@@ -71,4 +79,10 @@ private:
 	static char deleteFile(char *e, int part);
 	static ClusterNo next(ClusterNo c);
 	static void writeNext(ClusterNo dest, ClusterNo sour);
+
+	static bool clearBitVectorBit(int n, int ind);
+
+	friend class ClusterBuffer;
+public:
+	static char oldFormat(char part);
 };

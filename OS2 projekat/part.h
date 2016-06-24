@@ -17,5 +17,5 @@ public:
 	
 	virtual ~Partition();
 private:
-	PartitionImpl * myImpl;
+	PartitionImpl *myImpl;
 };

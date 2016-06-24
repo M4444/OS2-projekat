@@ -2,6 +2,7 @@
 #include "part.h"
 #include "file.h"
 #include "kernfile.h"
+#include "clusterbuffer.h"
 #include <cstring>
 #include <stdio.h>
 #include <cmath>
@@ -57,8 +58,10 @@ void KernelFS::clear4B(unsigned char* z)
 
 bool KernelFS::partIsMounted(char p)
 {
-	if(KernelFS::partitions['A' - p] != nullptr) return true;
-	else return false;
+	int num = pToInd(p);
+	if(num < 0 || num > 26) return false;
+	if(KernelFS::partitions[num] == nullptr) return false;
+	return true;
 }
 
 void KernelFS::writeFAT(ClusterNo num, const char *buffer)
@@ -102,37 +105,103 @@ ClusterNo KernelFS::getClNumFromBsize(unsigned int sizeB)
 
 int KernelFS::getMountNum(char part)
 {
-	int num = 'A' - part;
+	int num = pToInd(part);
 	if(num < 0 || num > 26) return -1;
 	if(!partIsMounted(part)) return -2;
+	return num;
+}
+
+bool KernelFS::clearBitVectorBit(int n, int ind)
+{
+	int clusterNum = n / 16384;
+	int entryNum = (n % 16384) / 32;
+	int bitNum = n % 32;
+
+	char buffer[ClusterSize];
+
+	if(KernelFS::partitions[ind]->readCluster(clusterNum, buffer) == 0) return false;
+	buffer[entryNum * 4 + 3 - bitNum/8] &= ~(0x80 >> (bitNum % 8));
+	if(KernelFS::partitions[ind]->writeCluster(clusterNum, buffer) == 0) return false;
+
+	return true;
 }
 
 char KernelFS::mount(Partition* partition)
 {
 	int i=0;
-	while((KernelFS::partitions[i] != nullptr) || i == 26)
+	while(KernelFS::partitions[i] != nullptr)
 	{
+		if(i == 26) return '0';		// montirano maksimalnih 26 particija
 		i++;
 	}
-	if(i == 26) return '0';
 	KernelFS::partitions[i] = partition;
-	return 'A'+i;
+	return indToP(i);
 }
 
 char KernelFS::unmount(char part)
 {
-	int ind = getMountNum(part);
-	if(ind < 0) return '0';
+	if(!partIsMounted(part)) return 0;	// neuspeh
 	
-	if(KernelFS::partitions[ind] != nullptr)
-	{
-		KernelFS::partitions[ind] = nullptr;
-		return '1';		// uspeh
-	}
-	else return '0';	// neuspeh
+	// TODO block until all files of this partition are closed
+	// every openFile after this returns an error
+	KernelFS::partitions[pToInd(part)] = nullptr;
+	return 1;		// uspeh
 }
 
 char KernelFS::format(char part)
+{
+	// TODO block until all files of this partition are closed
+	// every openFile after this returns an error
+
+	if(!partIsMounted(part)) return 0;	// neuspeh
+	
+	int ind = pToInd(part);
+	unsigned long size = KernelFS::partitions[ind]->getNumOfClusters();
+	ClusterNo k = 0;
+	ClusterBuffer *clBuff = new ClusterBuffer(ind, k);
+
+	/* Bit Vector: */
+	// - highest bit <-> first cluster
+	// - little-endian
+	// - index of root is after the last bit vector cluster
+	{
+		int IndEntries = (size / 8) / 4;
+
+		// fill the full entries with 1's
+		for(int i = 0; i < IndEntries - 1; i++)
+		{
+			if(!(clBuff->writeEntry(~0))) return 0;
+		}
+		// fill the last entry
+		IndEntry entry = 0;
+		int leftover = size % 32;
+		for(int i = 0; i < 32; i++)
+		{
+			entry <<= 1;
+			entry |= (i - leftover) < 0;
+		}
+		if(!(clBuff->writeEntry(entry))) return 0;
+		if(!(clBuff->writeToPart())) return 0;
+
+		// now set clear bits for clusters occupied by bit vector
+		k = clBuff->getCurrClusterNum();
+		for(int i = 0; i < k; i++)
+		{
+			clearBitVectorBit(i, ind);
+		}
+	}
+	/* End of Bit Vector */
+
+	/* Root Directory: */
+	// write root index in the next cluster
+	clBuff->reset();
+	if(!(clBuff->writeToPart())) return 0;
+	clearBitVectorBit(k, ind);
+	/* End of Root Directory */
+	return 1;
+}
+
+char KernelFS::oldFormat(char part)
 {
 	int ind = getMountNum(part);
 	if(ind < 0) return 0;

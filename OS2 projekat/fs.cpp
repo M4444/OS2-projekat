@@ -42,10 +42,10 @@ char FS::deleteFile(char* fname)
 
 //char FS::deleteDir(char* dirname);
 
-char FS::readDir(char* dirname, EntryNum n, Entry &e)
+/*char FS::readDir(char* dirname, EntryNum n, Entry &e)
 {
 	return myImpl->readDir(dirname, n, e);
-}
+}*/
 
 
 //FS ();

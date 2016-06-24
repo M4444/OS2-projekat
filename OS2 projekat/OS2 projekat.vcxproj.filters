@@ -19,14 +19,17 @@
     <Filter Include="Header Files\Wrapper">
       <UniqueIdentifier>{912d2c38-b5ae-4691-9e87-a478f9a5dc24}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\test">
+      <UniqueIdentifier>{b8368142-84f5-40b1-9da7-8a517b3bb7f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\MyImpl">
+      <UniqueIdentifier>{d2888171-c5ba-4959-8e84-2b3f71537833}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MyImpl">
+      <UniqueIdentifier>{8a871d15-7e30-4741-a7ef-e643f2b8831f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="test.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="kernfile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="file.cpp">
       <Filter>Source Files\Wrapper</Filter>
     </ClCompile>
@@ -36,23 +39,35 @@
     <ClCompile Include="part.cpp">
       <Filter>Source Files\Wrapper</Filter>
     </ClCompile>
-    <ClCompile Include="kernelfs.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_main.cpp">
+      <Filter>Source Files\test</Filter>
+    </ClCompile>
+    <ClCompile Include="nit1.cpp">
+      <Filter>Source Files\test</Filter>
+    </ClCompile>
+    <ClCompile Include="nit2.cpp">
+      <Filter>Source Files\test</Filter>
+    </ClCompile>
+    <ClCompile Include="nit3.cpp">
+      <Filter>Source Files\test</Filter>
+    </ClCompile>
+    <ClCompile Include="kernelfs.cpp">
+      <Filter>Source Files\MyImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="kernfile.cpp">
+      <Filter>Source Files\MyImpl</Filter>
+    </ClCompile>
     <ClCompile Include="partimp.cpp">
+      <Filter>Source Files\MyImpl</Filter>
+    </ClCompile>
+    <ClCompile Include="clusterbuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="kernfile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="partimp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="kernelfs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="file.h">
       <Filter>Header Files\Wrapper</Filter>
     </ClInclude>
@@ -61,6 +76,21 @@
     </ClInclude>
     <ClInclude Include="part.h">
       <Filter>Header Files\Wrapper</Filter>
+    </ClInclude>
+    <ClInclude Include="testprimer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="clusterbuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kernelfs.h">
+      <Filter>Header Files\MyImpl</Filter>
+    </ClInclude>
+    <ClInclude Include="kernfile.h">
+      <Filter>Header Files\MyImpl</Filter>
+    </ClInclude>
+    <ClInclude Include="partimp.h">
+      <Filter>Header Files\MyImpl</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

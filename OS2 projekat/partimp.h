@@ -19,4 +19,7 @@ private:
 	char workingCl[ClusterSize];
 	unsigned long workingClNum;
 	bool wclinit;
+
+	bool *clusterFree;
+	int rootDirIndex;
 };

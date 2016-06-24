@@ -3,6 +3,7 @@
 
 File::File() {}
 
+//char File::write(BytesCnt Bcnt, char* buffer)
 char File::write(BytesCnt Bcnt, char* buffer)
 {
 	return myImpl->write(Bcnt, buffer);
